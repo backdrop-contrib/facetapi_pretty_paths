@@ -63,7 +63,7 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
     $this->adapter = $adapter;
     $this->options = variable_get('facetapi_pretty_paths_searcher_' . $this->adapter->getSearcher() . '_options');
     $base_path_provider = isset($this->options['base_path_provider']) ? $this->options['base_path_provider'] : 'default';
-    $class = ctools_plugin_load_class('facetapi_pretty_paths', 'base_path_provider', $base_path_provider, 'handler');
+    $class = plugin_manager_load_class('facetapi_pretty_paths', 'base_path_provider', $base_path_provider, 'handler');
     $this->basePathProvider = new $class;
   }
 

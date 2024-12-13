@@ -1,14 +1,9 @@
 name = Facet API Pretty Paths
-core = 7.x
+backdrop = 1.x
+type = module
 description = "Enables pretty paths for searches with Facet API."
 
 dependencies[] = facetapi
+dependencies[] = plugin_manager
 package = Search Toolkit
 
-files[] = plugins/facetapi/url_processor_pretty_paths.inc
-files[] = plugins/base_path_provider/facetapi_pretty_paths_base_path_provider.inc
-files[] = plugins/base_path_provider/facetapi_pretty_paths_adapter_base_path_provider.inc
-files[] = plugins/base_path_provider/facetapi_pretty_paths_default_base_path_provider.inc
-files[] = plugins/coders/facetapi_pretty_paths_coder_default.inc
-files[] = plugins/coders/facetapi_pretty_paths_coder_taxonomy.inc
-files[] = plugins/coders/facetapi_pretty_paths_coder_taxonomy_pathauto.inc
