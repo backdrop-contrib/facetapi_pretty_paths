@@ -21,6 +21,17 @@ function facetapi_pretty_paths_autoload_info() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function facetapi_pretty_paths_config_info() {
+  $prefixes['facetapi_pretty_paths.settings'] = array(
+    'label' => t('Facet API Pretty Paths settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_facetapi_url_processors().
  */
 function facetapi_pretty_paths_facetapi_url_processors() {
@@ -43,10 +54,10 @@ function facetapi_pretty_paths_facetapi_url_processors() {
  * Implements hook_facetapi_searcher_info().
  */
 function facetapi_pretty_paths_facetapi_searcher_info_alter(array &$searcher_info) {
+  $config = config('facetapi_pretty_paths.settings');
   foreach ($searcher_info as &$info) {
     // Activate pretty paths optionally per searcher, as configured.
-    $id = 'facetapi_pretty_paths_searcher_' . $info['name'];
-    $info['url processor'] = variable_get($id) ? 'pretty_paths' : 'standard';
+    $info['url processor'] = $config->get('searcher.' . $info['name'] . '.enabled') ? 'pretty_paths' : 'standard';
     $info['facetapi pretty paths coder'] = 'default';
   }
 }
@@ -79,21 +90,19 @@ function facetapi_pretty_paths_form_facetapi_facet_display_form_alter(&$form, &$
         array('@taxonomy_segment' => '<alias>/<term-name>-<term-id>')),
   );
 
-  // Taxonomy Pathauto Coder settings.
+  // Taxonomy Path pattern Coder settings.
 
-  // 1. Check if pathauto is enabled.
-  // 2. Check for Apache Solr taxonomy term fields.
-  // 3. Check for Search API taxonomy term fields.
-  if (module_exists('pathauto') &&
-      ((!empty($facet['map options']['module_name']) && $facet['map options']['module_name'] == 'Taxonomy') ||
-      (!empty($facet['field type']) && $facet['field type'] == 'taxonomy_term'))) {
+  // 1. Check for Apache Solr taxonomy term fields.
+  // 2. Check for Search API taxonomy term fields.
+  if ((!empty($facet['map options']['module_name']) && $facet['map options']['module_name'] == 'Taxonomy') ||
+      (!empty($facet['field type']) && $facet['field type'] == 'taxonomy_term')) {
 
     $facet_settings = $adapter->getFacetSettingsGlobal($facet);
     $form['global']['pretty_paths_taxonomy_pathauto'] = array(
       '#type' => 'checkbox',
       '#title' => t('Reuse term aliases'),
       '#default_value' => !empty($facet_settings->settings['pretty_paths_taxonomy_pathauto']) ? TRUE : FALSE,
-      '#description' => t('If set, the term alias from the pathauto settings will be reused, which avoids term ids in the facet aliases. This setting only works if the default taxonomy path pattern \'[term:vocabulary]/[term:name]\' is used.'),
+      '#description' => t('If set, the term alias from the path pattern settings will be reused, which avoids term ids in the facet aliases. This setting only works if the default taxonomy path pattern \'[term:vocabulary]/[term:name]\' is used.'),
     );
     $options = array();
     foreach (taxonomy_get_vocabularies() as $voc) {
@@ -160,7 +169,7 @@ function facetapi_pretty_paths_menu() {
   $items['admin/config/search/facetapi_pretty_paths'] = array(
     'title' => 'FacetAPI Pretty Paths',
     'description' => 'Configure pretty paths settings',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('facetapi_pretty_paths_admin_form'),
     'access arguments' => array('administer facetapi pretty paths'),
     'type' => MENU_NORMAL_ITEM,
@@ -184,23 +193,27 @@ function facetapi_pretty_paths_permission() {
  */
 function facetapi_pretty_paths_admin_form($form, &$form_state) {
   // Allow to enable / disable pretty paths per searcher.
-  $searcher_info = facetapi_get_searcher_info();
+  $config = config('facetapi_pretty_paths.settings');
+  $form['#config'] = 'facetapi_pretty_paths.settings';
+  $form['#tree'] = TRUE;
   $form['searcher'] = array(
     '#type' => 'fieldset',
     '#title' => t('Enable pretty paths per searcher'),
     '#type' => 'fieldset',
   );
   foreach (facetapi_get_searcher_info() as $info) {
-    $id = 'facetapi_pretty_paths_searcher_' . $info['name'];
+    $id = $info['name'];
+    $searcher_config = $config->get('searcher.' . $id);
+    $enabled = ($searcher_config == NULL) ? ($info['url processor'] == 'pretty_paths') : $searcher_config['enabled'];
     // Add a checkbox to enable pretty paths per searcher.
     $form['searcher'][$id] = array(
       '#type' => 'checkbox',
       '#title' => t('@searcher', array('@searcher' => $info['name'])),
-      '#default_value' => variable_get($id, $info['url processor'] == 'pretty_paths'),
+      '#default_value' => $enabled,
       '#description' => t("Use pretty paths for the @searcher_label", array("@searcher_label" => $info['label'])),
     );
     // An additional fieldset provides additional options per searcher.
-    $options = variable_get($id . '_options');
+    $options = $searcher_config['options'];
     $form['searcher'][$id . '_options'] = array(
       '#type' => 'fieldset',
       '#title' => t('Options for @searcher', array('@searcher' => $info['name'])),
@@ -232,7 +245,31 @@ function facetapi_pretty_paths_admin_form($form, &$form_state) {
     }
     $form['searcher'][$id . '_options']['base_path_provider'] = $base_path_providers_form_item;
   }
-  return system_settings_form($form);
+  // return system_settings_form($form);
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+
+  return $form;
+}
+
+/**
+ * Submit handler for facetapi_pretty_paths_admin_form().
+ */
+function facetapi_pretty_paths_admin_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $config = config('facetapi_pretty_paths.settings');
+  foreach ($values['searcher'] as $key => $value) {
+    if (strrpos($key, '_options') !== FALSE) {
+      $key = substr($key, 0, -8);
+      $config->set('searcher.' . $key . '.options', $value);
+    }
+    else {
+      $config->set('searcher.' . $key . '.enabled', $value);
+    }
+  }
+  $config->save();
+
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**

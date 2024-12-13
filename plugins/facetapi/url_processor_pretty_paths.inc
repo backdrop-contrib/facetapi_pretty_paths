@@ -13,14 +13,14 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
   /**
    * An array of filter params.
    *
-   * @var array.
+   * @var array
    */
   protected $filterParams = array();
 
   /**
    * An array of pretty path segments.
    *
-   * @var array.
+   * @var array
    */
   protected $pathSegments = array();
 
@@ -33,16 +33,22 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
 
   /**
    * Options that apply for this FacetapiUrlProcessor.
+   *
+   * @var array
    */
   protected $options = array();
 
   /**
    * The full path string, as we override $_GET['q].
+   *
+   * @var string|null
    */
   protected $fullPath = NULL;
 
   /**
    * The base path for constructing pretty facet paths.
+   *
+   * @var string|null
    */
   protected $pathWithoutSegments = NULL;
 
@@ -54,23 +60,19 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
   protected $basePathProvider;
 
   /**
-   * Constructor, sets adapter.
-   *
-   * @param FacetapiAdapter $adapter
-   *   The adapter that uses this FacetapiUrlProcessor.
+   * @inheritdoc
    */
   function __construct(FacetapiAdapter $adapter) {
+    $config = config('facetapi_pretty_paths.settings');
     $this->adapter = $adapter;
-    $this->options = variable_get('facetapi_pretty_paths_searcher_' . $this->adapter->getSearcher() . '_options');
+    $this->options = $config->get('searcher.' . $this->adapter->getSearcher() . '.options');
     $base_path_provider = isset($this->options['base_path_provider']) ? $this->options['base_path_provider'] : 'default';
     $class = plugin_manager_load_class('facetapi_pretty_paths', 'base_path_provider', $base_path_provider, 'handler');
     $this->basePathProvider = new $class;
   }
 
   /**
-   * Pulls facet params from the $_GET variable.
-   *
-   * Overrides FacetapiUrlProcessorStandard::fetchParams().
+   * @inheritdoc
    */
   public function fetchParams() {
 
@@ -139,9 +141,9 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
   }
 
   /**
-   *  Remove the filter query part from params and return it.
+   * @inheritdoc
    *
-   *  Overrides FacetapiUrlProcessorStandard::getQueryString().
+   *  Remove the filter query part from params and return it.
    */
   public function getQueryString(array $facet, array $values, $active) {
     $params = $this->params;
@@ -150,12 +152,12 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
   }
 
   /**
+   * @inheritdoc
+   *
    *  Pretty paths will be generated as "search/url/segment1/segment2/".
    *
    *  By default, a segment will look like:
    *    "<alias>/<value>".
-   *
-   *  Overrides FacetapiUrlProcessorStandard::getFacetPath().
    */
   public function getFacetPath(array $facet, array $values, $active) {
     $segments = $this->pathSegments;
@@ -209,6 +211,10 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
 
   /**
    * Generate a path segment for a given facet + value.
+   *
+   * @param array $facet
+   *   Passed by reference.
+   * @param string $value
    */
   protected function getPathSegment(&$facet, $value) {
     $pretty_paths_alias = $this->getFacetPrettyPathsAlias($facet);
@@ -220,6 +226,13 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
     );
   }
 
+  /**
+   * Encode path segment
+   *
+   * @param array $segment
+   *   Passed by reference
+   * @param array $facet
+   */
   protected function encodePathSegment(array &$segment, array $facet) {
     facetapi_pretty_paths_coder_callback('encodePathSegment',
       array(
@@ -230,6 +243,12 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
     );
   }
 
+  /**
+   * Decode path segment alias
+   *
+   * @param string $alias
+   * @return array
+   */
   protected function decodePathSegmentAlias($alias) {
     return facetapi_pretty_paths_coder_callback('decodePathSegmentAlias',
       array(
@@ -238,6 +257,13 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
     );
   }
 
+  /**
+   * Decode path segment value
+   *
+   * @param string $value
+   * @param array $facet
+   * @return array
+   */
   protected function decodePathSegmentValue($value, array $facet) {
     return facetapi_pretty_paths_coder_callback('decodePathSegmentValue',
       array(
@@ -253,6 +279,9 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
    *
    * If there is no custom pretty_paths_alias settings, in will default
    * to rawurlencode($facet['field alias']).
+   *
+   * @param array $facet
+   * @return string
    */
   public function getFacetPrettyPathsAlias(array $facet) {
     $facet_settings = $this->adapter->getFacetSettingsGlobal($facet);
@@ -265,7 +294,7 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
    * Implements FacetapiUrlProcessorPrettyPaths::setBreadcrumb().
    */
   public function setBreadcrumb() {
-    $breadcrumb = drupal_get_breadcrumb();
+    $breadcrumb = backdrop_get_breadcrumb();
 
     // $facets to use later to get the segment
     $facets = $this->adapter->getEnabledFacets();
@@ -320,7 +349,7 @@ class FacetapiUrlProcessorPrettyPaths extends FacetapiUrlProcessorStandard {
     }
 
     // Sets the breadcrumb trail with h keys and filters.
-    drupal_set_breadcrumb($breadcrumb);
+    backdrop_set_breadcrumb($breadcrumb);
   }
 
   /**

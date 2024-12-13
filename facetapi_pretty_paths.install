@@ -1,0 +1,21 @@
+<?php
+/**
+ * @file
+ * Install, updates and uninstall functions.
+ */
+
+/**
+ * Migrate variables to config.
+ */
+function facetapi_pretty_paths_update_1000() {
+  $config = config('facetapi_pretty_paths.settings');
+  foreach (facetapi_get_searcher_info() as $info) {
+    $id = 'facetapi_pretty_paths_searcher_' . $info['name'];
+    $config->set('searcher.' . $info['name'] . '.enabled', update_variable_get($id, ($info['url processor'] == 'pretty_paths')));
+    $config->set('searcher.' . $info['name'] . '.options', update_variable_get($id . '_options', array()));
+
+    update_variable_del($id);
+    update_variable_del($id . '_options');
+  }
+  $config->save();
+}

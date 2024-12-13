@@ -12,7 +12,8 @@ interface FacetApiPrettyPathsBasePathProvider {
 
   /**
    * @param FacetapiUrlProcessorPrettyPaths $urlProcessor
-   * @return base path.
+   * @return string
+   *   base path.
    */
   public function getBasePath(FacetapiUrlProcessorPrettyPaths $urlProcessor);
 

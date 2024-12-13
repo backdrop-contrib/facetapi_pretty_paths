@@ -11,8 +11,7 @@
 class FacetApiPrettyPathsDefaultBasePathProvider implements FacetApiPrettyPathsBasePathProvider {
 
   /**
-   * @param FacetapiUrlProcessorPrettyPaths $urlProcessor
-   * @return base path.
+   * @inheritdoc
    */
   public function getBasePath(FacetapiUrlProcessorPrettyPaths $urlProcessor) {
     return $urlProcessor->getPathWithoutSegments();

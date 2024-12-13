@@ -11,9 +11,9 @@
 class FacetApiPrettyPathsCoderTaxonomy extends FacetApiPrettyPathsCoderDefault {
 
   /**
-   * Taxonomy special case: <alias>/<term-name>-<term-id>
+   * @inheritdoc
    *
-   * @see FacetApiPrettyPathsCoderDefault::encodePathSegment()
+   * Taxonomy special case: <alias>/<term-name>-<term-id>
    */
   public function encodePathSegment(array $args) {
     if ($term = taxonomy_term_load($args['segment']['value'])) {
@@ -23,9 +23,9 @@ class FacetApiPrettyPathsCoderTaxonomy extends FacetApiPrettyPathsCoderDefault {
   }
 
   /**
-   * Taxonomy special case: <alias>/<term-name>-<term-id>
+   * @inheritdoc
    *
-   * @see FacetApiPrettyPathsCoderDefault::decodePathSegmentValue()
+   * Taxonomy special case: <alias>/<term-name>-<term-id>
    */
   public function decodePathSegmentValue(array $args) {
     $exploded = explode('-', $args['value']);

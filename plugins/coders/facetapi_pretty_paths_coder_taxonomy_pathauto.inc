@@ -17,9 +17,9 @@
 class FacetApiPrettyPathsCoderTaxonomyPathauto extends FacetApiPrettyPathsCoderDefault {
 
   /**
-   * Taxonomy pathauto special case: <facet alias>/<term-name alias>
+   * @inhericdoc
    *
-   * @see FacetApiPrettyPathsCoderDefault::encodePathSegment()
+   * Taxonomy pathauto special case: <facet alias>/<term-name alias>
    */
   public function encodePathSegment(array $args) {
     $voc_alias = $this->getVocabularyPathAlias($args['facet'], $args['adapter']);
@@ -27,7 +27,7 @@ class FacetApiPrettyPathsCoderTaxonomyPathauto extends FacetApiPrettyPathsCoderD
       if ($term = taxonomy_term_load($args['segment']['value'])) {
         // Get the alias ([term:vocabulary]/[term:name]) for this term and
         // extract the term:name part.
-        $alias = drupal_lookup_path('alias', 'taxonomy/term/' . $term->tid);
+        $alias = backdrop_lookup_path('alias', 'taxonomy/term/' . $term->tid);
         if ($alias) {
           $parts = explode('/', $alias);
           if (count($parts) == 2) {
@@ -40,16 +40,16 @@ class FacetApiPrettyPathsCoderTaxonomyPathauto extends FacetApiPrettyPathsCoderD
   }
 
   /**
-   * Taxonomy pathauto special case: <facet alias>/<term-name alias>
+   * @inheritdoc
    *
-   * @see FacetApiPrettyPathsCoderDefault::decodePathSegmentValue()
+   * Taxonomy pathauto special case: <facet alias>/<term-name alias>
    */
   public function decodePathSegmentValue(array $args) {
     $voc_alias = $this->getVocabularyPathAlias($args['facet'], $args['adapter']);
     if ($voc_alias && $args['value'] != '!') {
       // Rebuild the term alias, get the source (taxonomy/term/[term:tid]) and
       // extract the term id.
-      $source = drupal_lookup_path('source', $voc_alias . '/' . $args['value']);
+      $source = backdrop_lookup_path('source', $voc_alias . '/' . $args['value']);
       if ($source) {
         $exploded = explode('/', $source);
         if (count($exploded) == 3) {
@@ -67,17 +67,20 @@ class FacetApiPrettyPathsCoderTaxonomyPathauto extends FacetApiPrettyPathsCoderD
 
   /**
    * Helper function that returns the path alias for a vocabulary.
+   *
+   * @param array $facet_info
+   * @param FacetapiAdapter $adapter
+   *
+   * @return string|false
    */
-  private function getVocabularyPathAlias($facet_info, $adapter) {
+  private function getVocabularyPathAlias($facet_info, FacetapiAdapter $adapter) {
     static $aliases = array();
     if (!isset($aliases[$facet_info['name']])) {
       $aliases[$facet_info['name']] = FALSE;
       $facet_settings = $adapter->getFacetSettingsGlobal($facet_info);
-      $voc = taxonomy_vocabulary_machine_name_load($facet_settings->settings['pretty_paths_taxonomy_pathauto_vocabulary']);
-      if ($voc && module_exists('pathauto')) {
-        // Needed, as of http://drupal.org/node/907578#comment-5564008
-        require_once drupal_get_path('module', 'pathauto') . '/pathauto.inc';
-        $aliases[$facet_info['name']] = pathauto_cleanstring($voc->name);
+      $voc = taxonomy_vocabulary_load($facet_settings->settings['pretty_paths_taxonomy_pathauto_vocabulary']);
+      if ($voc) {
+        $aliases[$facet_info['name']] = path_clean_string($voc->name);
       }
     }
     return $aliases[$facet_info['name']];
