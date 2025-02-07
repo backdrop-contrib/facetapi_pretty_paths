@@ -213,7 +213,7 @@ function facetapi_pretty_paths_admin_form($form, &$form_state) {
       '#description' => t("Use pretty paths for the @searcher_label", array("@searcher_label" => $info['label'])),
     );
     // An additional fieldset provides additional options per searcher.
-    $options = $searcher_config['options'];
+    $options = ($searcher_config == NULL) ? array() : $searcher_config['options'];
     $form['searcher'][$id . '_options'] = array(
       '#type' => 'fieldset',
       '#title' => t('Options for @searcher', array('@searcher' => $info['name'])),
