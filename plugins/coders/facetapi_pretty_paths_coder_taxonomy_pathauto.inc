@@ -75,6 +75,7 @@ class FacetApiPrettyPathsCoderTaxonomyPathauto extends FacetApiPrettyPathsCoderD
    */
   private function getVocabularyPathAlias($facet_info, FacetapiAdapter $adapter) {
     static $aliases = array();
+    module_load_include('inc', 'path');
     if (!isset($aliases[$facet_info['name']])) {
       $aliases[$facet_info['name']] = FALSE;
       $facet_settings = $adapter->getFacetSettingsGlobal($facet_info);

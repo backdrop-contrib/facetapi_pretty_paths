@@ -3,6 +3,7 @@ backdrop = 1.x
 type = module
 description = "Enables pretty paths for searches with Facet API."
 
+dependencies[] = path
 dependencies[] = facetapi
 dependencies[] = plugin_manager
 package = Search Toolkit
