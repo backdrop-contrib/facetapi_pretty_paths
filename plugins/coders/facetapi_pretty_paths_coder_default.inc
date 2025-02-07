@@ -72,6 +72,7 @@ class FacetApiPrettyPathsCoderDefault {
    */
   protected function prettyPath($text) {
     // @todo: Make this pluggable?
+    module_load_include('inc', 'path');
     return path_clean_string($text);
   }
 }
