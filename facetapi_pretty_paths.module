@@ -367,7 +367,7 @@ function facetapi_pretty_paths_facetapi_facet_info_alter(array &$facet_info, arr
     $facet_settings_key = $searcher_info['name'] . '::' . $facet['field'];
     if (isset($searcher_settings[$facet_settings_key]) && isset($searcher_settings[$facet_settings_key]->settings)) {
       $facet_settings = $searcher_settings[$facet_settings_key];
-      if (module_exists('pathauto') && !empty($facet_settings->settings['pretty_paths_taxonomy_pathauto'])) {
+      if (!empty($facet_settings->settings['pretty_paths_taxonomy_pathauto'])) {
         $taxonomy_coder = 'taxonomy_pathauto';
       }
     }
