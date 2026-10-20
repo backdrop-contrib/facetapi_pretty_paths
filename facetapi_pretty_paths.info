@@ -6,5 +6,9 @@ description = "Enables pretty paths for searches with Facet API."
 dependencies[] = path
 dependencies[] = facetapi
 dependencies[] = plugin_manager
-package = Search Toolkit
 
+package = Search Toolkit
+tags[] = search
+tags[] = facets
+
+configure = admin/config/search/facetapi_pretty_paths
